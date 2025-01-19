@@ -1,0 +1,9 @@
+Previamente: Intallar Ollama y apuntar la version (actualmente 3.2) y tener Python 10 u 11.
+
+Previamente: 
+Nota: Para saber la verion de Ollama, en Cmd colocar: ollama list
+
+Comandos:
+1) - python -m venv entornoIA   
+2 y activar en cada sesion) .\entornoIA\Scripts\activate         
+3) pip install ollama
