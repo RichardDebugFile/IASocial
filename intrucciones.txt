@@ -1,9 +1,13 @@
 Previamente: Intallar Ollama y apuntar la version (actualmente 3.2) y tener Python 10 u 11.
+Para saber su version de Ollama, poner este comando: ollama list
+Según la versión, se debe cambiar en "ConexionOllama.py"
+Link Ollama 3.2: https://ollama.com/library/llama3.2
+Documentacion Ollama: https://github.com/ollama/ollama-python 
 
 Previamente: 
 Nota: Para saber la verion de Ollama, en Cmd colocar: ollama list
 
 Comandos:
-1) - python -m venv entornoIA   
+1) python -m venv entornoIA   
 2 y activar en cada sesion) .\entornoIA\Scripts\activate         
 3) pip install ollama
