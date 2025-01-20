@@ -7,7 +7,9 @@ Documentacion Ollama: https://github.com/ollama/ollama-python
 Previamente: 
 Nota: Para saber la verion de Ollama, en Cmd colocar: ollama list
 
-Comandos:
+Comandos y librerías a instalar:
 1) python -m venv entornoIA   
 2 y activar en cada sesion) .\entornoIA\Scripts\activate         
 3) pip install ollama
+4) pip install speechrecognition pyttsx3
+5) pip install pyaudio
