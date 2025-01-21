@@ -1,0 +1,41 @@
+-- Crear la base de datos
+CREATE DATABASE IASocial;
+
+-- Usar la base de datos
+USE IASocial;
+
+-- Tabla: sentimiento_IA
+CREATE TABLE sentimiento_IA (
+    id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único
+    usuario VARCHAR(255) NOT NULL,              -- Nombre del usuario
+    sentimiento_principal INT DEFAULT 1,        -- Sentimiento principal (1: Alegría, 2: Tristeza, etc.)
+    sentimiento_texto VARCHAR(50) DEFAULT 'Alegría',  -- Texto descriptivo del sentimiento
+    total_sentimiento TEXT NOT NULL,            -- Últimos 20 resultados de sentimientos (e.g., '1,1,2,3,1')
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP -- Fecha y hora del registro
+);
+
+-- Tabla: chat_memoria
+CREATE TABLE chat_memoria (
+    id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único
+    usuario VARCHAR(255) NOT NULL,              -- Nombre del usuario
+    pregunta_us TEXT NOT NULL,                  -- Pregunta o respuesta del usuario
+    respuesta_ia TEXT NOT NULL,                 -- Respuesta generada por la IA
+    resumen_temp_ia TEXT,                       -- Resumen temporal (últimos chats del usuario y la IA)
+    resumen_ia TEXT,                            -- Resumen más completo (últimos 15 chats)
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP -- Fecha y hora del registro
+);
+
+-- Tabla: resumen_usuario
+CREATE TABLE resumen_usuario (
+    id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único
+    usuario VARCHAR(255) NOT NULL,              -- Nombre del usuario
+    resumen_temp_us TEXT,                       -- Resumen temporal (últimos chats solo del usuario)
+    resumen_us TEXT,                            -- Resumen más completo (últimos 15 chats del usuario)
+    personalidad_us TEXT,                       -- Resumen de la personalidad del usuario
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP -- Fecha y hora del registro
+);
+
+-- Índices para optimizar las consultas (si es necesario buscar por usuario)
+CREATE INDEX idx_usuario_sentimiento ON sentimiento_IA (usuario);
+CREATE INDEX idx_usuario_chat ON chat_memoria (usuario);
+CREATE INDEX idx_usuario_resumen ON resumen_usuario (usuario);

@@ -15,3 +15,5 @@ Comandos y librerías a instalar:
 3) pip install ollama
 4) pip install speechrecognition pyttsx3
 5) pip install pyaudio
+6) pip install mysql-connector-python
+
