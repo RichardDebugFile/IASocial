@@ -4,6 +4,8 @@ Según la versión, se debe cambiar en "ConexionOllama.py"
 Link Ollama 3.2: https://ollama.com/library/llama3.2
 Documentacion Ollama: https://github.com/ollama/ollama-python 
 
+En caso de error sobre la conexión, encender Ollama desde consola (CMD) con: ollama run llama3.2
+
 Previamente: 
 Nota: Para saber la verion de Ollama, en Cmd colocar: ollama list
 
