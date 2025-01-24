@@ -1,33 +1,37 @@
 from Memoria import Memoria
 
 def main():
-    # Configuración de la base de datos y modelo IA
+    # Configuración de conexión a la base de datos
     db_params = {
-        "host": "localhost",
-        "user": "root",
-        "password": "",
-        "database": "IASocial"
+        "host": "127.0.0.1",
+        "user": "root",  # Cambia esto por el usuario de tu base de datos
+        "password": "",  # Cambia esto por tu contraseña
+        "database": "iasocial"
     }
-    script_path = "script_personalidad.txt"
-    modelo_ia = "llama3.2"
 
-    # Inicializar Memoria con la conexión a MySQL y el script de personalidad
-    memoria = Memoria(db_params=db_params, script_path=script_path, modelo_ia=modelo_ia)
+    # Inicializar la clase Memoria
+    memoria = Memoria(db_params=db_params, script_path="script_personalidad.txt")
 
-    usuario = input("Por favor, ingresa tu nombre: ")
-    print("\nIA: Hola. Espero que tengas algo interesante que decir, ya que no suelo perder mi tiempo.")
-    
+    print("¡Bienvenido al chat con la IA!")
+    print("Escribe 'salir' para terminar la conversación.")
+
+    usuario = input("Por favor, ingresa tu nombre de usuario: ").strip()
+    if not usuario:
+        print("El nombre de usuario no puede estar vacío. Saliendo...")
+        return
+
     while True:
-        mensaje_usuario = input("Tú: ")
-        if mensaje_usuario.lower() in ["salir", "adiós", "terminar"]:
-            print("IA: Bueno, si no puedes seguir el ritmo, lo entiendo. ¡Adiós!")
+        # Solicitar entrada del usuario
+        mensaje_usuario = input(f"{usuario}: ").strip()
+        if mensaje_usuario.lower() == "salir":
+            print("Terminando la conversación. ¡Hasta luego!")
             break
 
-        # Interactuar con la IA
-        respuesta = memoria.interactuar(usuario, mensaje_usuario)
-        print(f"IA: {respuesta}")
-    
-    # Cerrar conexiones
+        # Enviar mensaje a la IA de Llama y obtener respuesta
+        respuesta_ia = memoria.interactuar(usuario, mensaje_usuario)
+        print(f"IA: {respuesta_ia}")
+
+    # Cerrar conexiones al finalizar
     memoria.cerrar_conexiones()
 
 if __name__ == "__main__":
