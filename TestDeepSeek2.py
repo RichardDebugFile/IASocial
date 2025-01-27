@@ -48,30 +48,28 @@ class TestDeepSeek:
 
     def guardar_resumen_temp(self, usuario, resumen):
         """
-        Guarda o actualiza el resumen general (resumen_temp_us) en la tabla 'resumen_usuario'.
+        Guarda un nuevo resumen general (resumen_temp_us) en la tabla 'resumen_usuario' con un identificador único.
         :param usuario: Nombre del usuario.
         :param resumen: Resumen generado por DeepSeek.
         """
         query = """
-        INSERT INTO resumen_usuario (usuario, resumen_temp_us)
-        VALUES (%s, %s)
-        ON DUPLICATE KEY UPDATE resumen_temp_us = %s;
+        INSERT INTO resumen_usuario (usuario, resumen_temp_us, timestamp)
+        VALUES (%s, %s, NOW());
         """
-        self.db.ejecutar_consulta(query, (usuario, resumen, resumen))
+        self.db.ejecutar_consulta(query, (usuario, resumen))
 
     def guardar_resumen_y_personalidad(self, usuario, resumen, personalidad):
         """
-        Guarda o actualiza el resumen del usuario y su personalidad en la tabla 'resumen_usuario'.
+        Guarda un nuevo resumen del usuario y su personalidad en la tabla 'resumen_usuario' con un identificador único.
         :param usuario: Nombre del usuario.
         :param resumen: Resumen generado por DeepSeek.
         :param personalidad: Personalidad interpretada del usuario.
         """
         query = """
-        INSERT INTO resumen_usuario (usuario, resumen_us, personalidad_us)
-        VALUES (%s, %s, %s)
-        ON DUPLICATE KEY UPDATE resumen_us = %s, personalidad_us = %s;
+        INSERT INTO resumen_usuario (usuario, resumen_us, personalidad_us, timestamp)
+        VALUES (%s, %s, %s, NOW());
         """
-        self.db.ejecutar_consulta(query, (usuario, resumen, personalidad, resumen, personalidad))
+        self.db.ejecutar_consulta(query, (usuario, resumen, personalidad))
 
     def interpretar_personalidad(self, resumen_usuario):
         """
