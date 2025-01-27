@@ -1,0 +1,4 @@
+Los archivos: Conexion DeepSeek, Ollama y MySQL son exclusivamente para la conexion respectiva.
+
+El archivo main.py registra la memoria de la tabla chat_memoria en la BBDD.
+

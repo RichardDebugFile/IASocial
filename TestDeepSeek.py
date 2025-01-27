@@ -79,7 +79,7 @@ class TestDeepSeek:
         Genera un resumen utilizando DeepSeek, lo imprime y almacena en la base de datos.
         :param usuario: Nombre del usuario.
         """
-        chats = self.obtener_chats(usuario)
+        chats = self.obtener_chats(usuario, limite=10)  # Limitar a las últimas 10 interacciones
         if not chats:
             print(f"No se encontraron chats para el usuario '{usuario}'.")
             return
@@ -89,15 +89,17 @@ class TestDeepSeek:
         print("Chats obtenidos:")
         print(conversaciones)
 
-        # Enviar la solicitud a DeepSeek
-        print("\nEnviando a DeepSeek...")
-        resumen = self.conexion_resumen.enviar_mensaje(
-            "Por favor, genera un resumen conciso de 20 palabras o menos del siguiente diálogo en español:\n" + conversaciones
-        )
-
-        # Imprimir la respuesta de DeepSeek
-        print("Respuesta de DeepSeek:")
-        print(resumen)
+        # Enviar la solicitud a DeepSeek con manejo de errores
+        try:
+            print("\nEnviando a DeepSeek...")
+            resumen = self.conexion_resumen.enviar_mensaje(
+                f"Por favor, genera un resumen conciso de 40 palabras o menos del siguiente diálogo en español:\n{conversaciones}"
+            )
+            print("Respuesta de DeepSeek:")
+            print(resumen)
+        except Exception as e:
+            print(f"Error en la conexión con DeepSeek: {e}")
+            resumen = "Error en la conexión con DeepSeek"
 
         # Limpia el resumen para eliminar etiquetas <think> y su contenido
         def eliminar_think(texto):
