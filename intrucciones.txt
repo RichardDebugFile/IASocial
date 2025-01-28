@@ -5,6 +5,7 @@ Link Ollama 3.2: https://ollama.com/library/llama3.2
 Documentacion Ollama: https://github.com/ollama/ollama-python 
 
 En caso de error sobre la conexión, encender Ollama desde consola (CMD) con: ollama run llama3.2
+En caso de error sobre la conexión, encender DeepSeek desde consola (CMD) con: ollama run deepseek-r1:8b
 
 Previamente: 
 Nota: Para saber la verion de Ollama, en Cmd colocar: ollama list
@@ -16,4 +17,5 @@ Comandos y librerías a instalar:
 4) pip install speechrecognition pyttsx3
 5) pip install pyaudio
 6) pip install mysql-connector-python
+7) ollama run deepseek-r1:8b
 
