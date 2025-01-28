@@ -19,3 +19,7 @@ Comandos y librerías a instalar:
 6) pip install mysql-connector-python
 7) ollama run deepseek-r1:8b
 
+
+8) pip install numpy
+9) pip install sentence-transformers
+10) pip install scikit-learn
