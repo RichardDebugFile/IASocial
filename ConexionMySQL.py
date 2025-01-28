@@ -61,3 +61,14 @@ class ConexionMySQL:
         if self.conn:
             self.conn.close()
             print("Conexión cerrada correctamente.")
+
+
+    def ejecutar_insert(self, query, params=None):
+        if params is None:
+            params = ()
+        cursor = self.conn.cursor()
+        cursor.execute(query, params)
+        last_id = cursor.lastrowid
+        self.conn.commit()
+        cursor.close()
+        return last_id
