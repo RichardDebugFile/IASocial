@@ -2,6 +2,7 @@ import threading
 from ConexionMySQL import ConexionMySQL
 from ConexionOLlama import ConexionOLlama
 from ConexionDeepSeek import ConexionDeepSeek
+from ResumenDeepSeek import ResumenDeepSeek  # Importamos la clase ResumenDeepSeek
 
 class Memoria:
     def __init__(self, db_params, script_path="script_personalidad.txt", modelo_ia="llama3.2", modelo_resumen="deepseek-r1:8b"):
@@ -11,6 +12,7 @@ class Memoria:
         self.conexion_ia = ConexionOLlama(modelo=modelo_ia)
         self.conexion_resumen = ConexionDeepSeek(modelo=modelo_resumen)
         self.chat_counter = 0  # Contador para activación del resumen
+        self.resumen_deepseek = ResumenDeepSeek(db_params, modelo_resumen)  # Instancia de ResumenDeepSeek
 
     def cargar_script(self, path):
         """
@@ -89,6 +91,9 @@ class Memoria:
         # Guardar chat
         self.guardar_chat(usuario, mensaje_usuario, respuesta_ia)
 
+        # Llamar a ResumenDeepSeek para procesar el usuario después de cada interacción
+        self.resumen_deepseek.procesar_usuario(usuario)
+
         return respuesta_ia
 
     def limpiar_respuesta(self, texto):
@@ -102,3 +107,4 @@ class Memoria:
         Cierra todas las conexiones abiertas (MySQL).
         """
         self.db.cerrar_conexion()
+        self.resumen_deepseek.cerrar_conexion()  # Cerrar la conexión de ResumenDeepSeek
