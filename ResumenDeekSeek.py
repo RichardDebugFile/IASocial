@@ -219,6 +219,22 @@ class ResumenDeepSeek:
             print(f"\n!!! Error generando resumen de usuario: {str(e)}")
             return None, None
 
+    def verificar_chats_suficientes(self, usuario, limite=10):
+        """
+        Verifica si hay suficientes chats para el usuario.
+        :param usuario: Nombre del usuario.
+        :param limite: Número mínimo de chats requeridos (por defecto 10).
+        :return: True si hay suficientes chats, False en caso contrario.
+        """
+        query = """
+        SELECT COUNT(*) as total
+        FROM chat_memoria
+        WHERE usuario = %s;
+        """
+        result = self.db.ejecutar_consulta(query, (usuario,))
+        total_chats = result[0][0] if result else 0
+        return total_chats >= limite
+
     def procesar_usuario(self, usuario):
         """
         Proceso modificado para guardar todo en una sola operación.
@@ -226,6 +242,11 @@ class ResumenDeepSeek:
         print(f"\n{'='*50}")
         print(f" INICIANDO PROCESO PARA USUARIO: {usuario.upper()} ")
         print(f"{'='*50}")
+        
+        # Verificar si hay suficientes chats
+        if not self.verificar_chats_suficientes(usuario):
+            print("No hay suficientes chats para generar un resumen.")
+            return
         
         # Verificar si existe un resumen anterior
         resumen_anterior = self.obtener_resumen_anterior(usuario)
