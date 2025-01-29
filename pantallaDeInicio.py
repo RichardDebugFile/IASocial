@@ -1,5 +1,6 @@
 import pygame
 import os
+import mysql.connector
 from Memoria import Memoria
 
 # Configuración de conexión a la base de datos
@@ -32,7 +33,7 @@ DARK_GRAY = (100, 100, 100)
 font = pygame.font.SysFont("Arial", 18)
 small_font = pygame.font.SysFont("Arial", 14)
 
-# Función para mostrar un cuadro de diálogo para ingresar el nombre de usuario
+# Obtener nombre del usuario
 def obtener_nombre_usuario():
     input_box = pygame.Rect(200, 150, 400, 40)
     input_text = ""
@@ -76,6 +77,28 @@ def obtener_nombre_usuario():
 # Obtener el nombre de usuario
 usuario = obtener_nombre_usuario()
 
+# Función para obtener el sentimiento principal de la base de datos
+def obtener_sentimiento_principal(usuario):
+    try:
+        db = mysql.connector.connect(**db_params)
+        cursor = db.cursor()
+        
+        cursor.execute(
+            "SELECT sentimiento_principal FROM sentimiento_ia WHERE usuario = %s",
+            (usuario,)
+        )
+        resultado = cursor.fetchone()
+        
+        db.close()
+        
+        if resultado:
+            return int(resultado[0])  # Retorna el número del sentimiento
+        return 1  # Por defecto, si no hay datos, se usa "Alegría"
+    
+    except Exception as e:
+        print(f"Error al obtener sentimiento principal: {e}")
+        return 1  # Si hay error, usar "Alegría" por defecto
+
 # Variables iniciales
 RESOURCE_PATH = "images"
 LOGO_PATH = os.path.join(RESOURCE_PATH, "logo.png")
@@ -94,11 +117,11 @@ SPRITE_PATHS = {
 logo = pygame.image.load(LOGO_PATH)
 logo = pygame.transform.smoothscale(logo, (80, 80))
 
-# Estado inicial
-current_emotion = 1
+# Obtener el sentimiento y actualizar imagen
+current_emotion = obtener_sentimiento_principal(usuario)
 sprite = pygame.image.load(SPRITE_PATHS[current_emotion][1])
 sprite = pygame.transform.smoothscale(sprite, SPRITE_SIZE)
-emotion_text = "Alegría"
+emotion_text = SPRITE_PATHS[current_emotion][0]
 
 # Variables para entrada de texto y respuesta de la IA
 input_text = ""
@@ -174,9 +197,6 @@ while running:
                     ai_response = memoria.interactuar(usuario, input_text.strip())
                     input_text = ""
     draw_screen()
-
-pygame.quit()
-memoria.cerrar_conexiones()
 
 pygame.quit()
 memoria.cerrar_conexiones()
