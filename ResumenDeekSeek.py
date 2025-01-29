@@ -1,7 +1,7 @@
 from ConexionDeepSeek import ConexionDeepSeek
 from ConexionMySQL import ConexionMySQL
 import re
-
+import time
 
 class ResumenDeepSeek:
     def __init__(self, db_params, modelo_resumen="deepseek-r1:8b"):
@@ -46,44 +46,71 @@ class ResumenDeepSeek:
         """
         return self.db.ejecutar_consulta(query, (usuario, limite))
 
+    def obtener_resumen_anterior(self, usuario):
+        """
+        Obtiene el resumen anterior del usuario, si existe.
+        :param usuario: Nombre del usuario.
+        :return: Resumen anterior o None si no existe.
+        """
+        query = """
+        SELECT resumen_us
+        FROM resumen_usuario
+        WHERE usuario = %s
+        ORDER BY timestamp DESC
+        LIMIT 1;
+        """
+        result = self.db.ejecutar_consulta(query, (usuario,))
+        return result[0][0] if result else None
+
+    def eliminar_chats_antiguos(self, usuario, limite=10):
+        """
+        Elimina los chats antiguos del usuario.
+        :param usuario: Nombre del usuario.
+        :param limite: Número máximo de chats a eliminar (por defecto 10).
+        """
+        query = """
+        DELETE FROM chat_memoria
+        WHERE usuario = %s
+        ORDER BY id ASC
+        LIMIT %s;
+        """
+        self.db.ejecutar_consulta(query, (usuario, limite))
+
     def interpretar_personalidad(self, resumen_usuario):
-            """
-            Interpreta la personalidad del usuario a partir de su resumen.
-            :param resumen_usuario: Resumen generado del usuario.
-            :return: Personalidad interpretada.
-            """
-            try:
-                print("\nInterpretando la personalidad del usuario...")
-                prompt = (
-                    "Analiza este texto y determina la personalidad con UNA SOLA PALABRA. "
-                    "Opciones: optimista, pesimista, neutral, curiosa, analítica, emocional, tímida, extrovertida, cuidadosa. "
-                    "Responde solo con la palabra, sin explicaciones ni formato:\n"
-                    f"{resumen_usuario}"
-                )
+        """
+        Interpreta la personalidad del usuario a partir de su resumen.
+        :param resumen_usuario: Resumen generado del usuario.
+        :return: Personalidad interpretada.
+        """
+        try:
+            print("\nInterpretando la personalidad del usuario...")
+            prompt = (
+                "Analiza este texto y determina la personalidad con UNA SOLA PALABRA. "
+                "Opciones: optimista, pesimista, neutral, curiosa, analítica, emocional, tímida, extrovertida, cuidadosa. "
+                "Responde solo con la palabra, sin explicaciones ni formato:\n"
+                f"{resumen_usuario}"
+            )
 
-                print("[IA] Prompt enviado para personalidad:")
-                print("--------------------------------------")
-                print(prompt)
-                print("--------------------------------------")
+            print("[IA] Prompt enviado para personalidad:")
+            print("--------------------------------------")
+            print(prompt)
+            print("--------------------------------------")
 
-                respuesta = self.conexion_resumen.enviar_mensaje(prompt)
+            respuesta = self.conexion_resumen.enviar_mensaje(prompt)
 
-                print("\n[IA] Respuesta cruda recibida:")
-                print("------------------------------")
-                print(respuesta)
-                print("------------------------------")
+            print("\n[IA] Respuesta cruda recibida:")
+            print("------------------------------")
+            print(respuesta)
+            print("------------------------------")
 
-                # Limpiar etiquetas <think> y tomar la primera palabra
-                respuesta_limpia = re.sub(r"<think>.*?</think>", "", respuesta, flags=re.DOTALL)
-                palabras = respuesta_limpia.strip().split()  # Dividir por espacios
-                return palabras[0].lower() if palabras else "desconocida"
-            
-                
-            except Exception as e:
-                print(f"Error al interpretar la personalidad: {e}")
-                return "desconocida"
-            
+            # Limpiar etiquetas <think> y tomar la primera palabra
+            respuesta_limpia = re.sub(r"<think>.*?</think>", "", respuesta, flags=re.DOTALL)
+            palabras = respuesta_limpia.strip().split()  # Dividir por espacios
+            return palabras[0].lower() if palabras else "desconocida"
 
+        except Exception as e:
+            print(f"Error al interpretar la personalidad: {e}")
+            return "desconocida"
 
     def guardar_resumen_completo(self, usuario, resumen_temp, resumen_usuario, personalidad):
         """
@@ -192,7 +219,6 @@ class ResumenDeepSeek:
             print(f"\n!!! Error generando resumen de usuario: {str(e)}")
             return None, None
 
-
     def procesar_usuario(self, usuario):
         """
         Proceso modificado para guardar todo en una sola operación.
@@ -201,11 +227,19 @@ class ResumenDeepSeek:
         print(f" INICIANDO PROCESO PARA USUARIO: {usuario.upper()} ")
         print(f"{'='*50}")
         
+        # Verificar si existe un resumen anterior
+        resumen_anterior = self.obtener_resumen_anterior(usuario)
+        
         # Generar ambos resúmenes
         resumen_temp = self.generar_resumen_temp_us(usuario)
         if not resumen_temp:
             print("Error: No se pudo generar el resumen temporal")
             return
+        
+        # Combinar el resumen anterior con el nuevo resumen temporal si existe
+        if resumen_anterior:
+            resumen_temp = f"{resumen_anterior}\n{resumen_temp}"
+        
         resumen_usuario, personalidad = self.generar_resumen_usuario(usuario)
         if not all([resumen_usuario, personalidad]):
             print("Error: No se pudo generar el resumen del usuario o la personalidad")
@@ -220,15 +254,16 @@ class ResumenDeepSeek:
             self.guardar_resumen_completo(usuario, resumen_temp, resumen_usuario, personalidad)
             print("\n✅ Datos guardados exitosamente!")
             
+            # Eliminar los 10 chats antiguos
+            self.eliminar_chats_antiguos(usuario)
+            print("\n✅ Chats antiguos eliminados exitosamente!")
+            
         except Exception as e:
             print(f"\n!!! Error crítico al guardar: {str(e)}")
-
-
 
     def cerrar_conexion(self):
         """Cierra la conexión a la base de datos."""
         self.db.cerrar_conexion()
-
 
 if __name__ == "__main__":
     # Configuración de la base de datos
