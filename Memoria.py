@@ -3,7 +3,6 @@ from ConexionMySQL import ConexionMySQL
 from ConexionOLlama import ConexionOLlama
 from ConexionDeepSeek import ConexionDeepSeek
 
-
 class Memoria:
     def __init__(self, db_params, script_path="script_personalidad.txt", modelo_ia="llama3.2", modelo_resumen="deepseek-r1:8b"):
         self.db = ConexionMySQL(**db_params)
@@ -33,23 +32,62 @@ class Memoria:
         self.db.ejecutar_consulta(query, (usuario, pregunta, respuesta))
         self.chat_counter += 1
 
-    
+    def obtener_interacciones_pasadas(self, usuario, limite=10):
+        """
+        Obtiene las últimas interacciones del usuario desde la base de datos.
+        :param usuario: Nombre del usuario.
+        :param limite: Número máximo de interacciones a recuperar.
+        :return: Cadena con las interacciones pasadas.
+        """
+        query = """
+        SELECT pregunta_us, respuesta_ia FROM chat_memoria
+        WHERE usuario = %s
+        ORDER BY id DESC
+        LIMIT %s;
+        """
+        resultados = self.db.ejecutar_consulta(query, (usuario, limite))
+        if resultados:
+            interacciones = "\n".join([f"Usuario: {pregunta}\nIA: {respuesta}" for pregunta, respuesta in resultados])
+            return f"Tus interacciones pasadas fueron:\n{interacciones}"
+        return ""
 
-    
+    def obtener_resumen_usuario(self, usuario):
+        """
+        Obtiene el último resumen del usuario desde la base de datos.
+        :param usuario: Nombre del usuario.
+        :return: Cadena con el resumen del usuario.
+        """
+        query = """
+        SELECT resumen_temp_us FROM resumen_usuario
+        WHERE usuario = %s
+        ORDER BY id DESC
+        LIMIT 1;
+        """
+        resultado = self.db.ejecutar_consulta(query, (usuario,))
+        if resultado:
+            return f"Resumen de conversaciones mucho más anteriores:\n{resultado[0][0]}"
+        return ""
 
     def interactuar(self, usuario, mensaje_usuario):
+        # Obtener interacciones pasadas
+        interacciones_pasadas = self.obtener_interacciones_pasadas(usuario)
         
+        # Obtener resumen del usuario
+        resumen_usuario = self.obtener_resumen_usuario(usuario)
 
         # Generar contexto
-        contexto = f"Personalidad de la IA\n{self.script_personalidad}"
+        contexto = (
+            f"Simularás esta personalidad:\n{self.script_personalidad}\n\n"
+            f"{resumen_usuario}\n\n"
+            f"{interacciones_pasadas}\n\n"
+        )
+        print(contexto)
 
-        entrada_ia = f"{contexto}\nUsuario: {mensaje_usuario}"
+        entrada_ia = f"{contexto}\nPregunta Usuario: {mensaje_usuario}"
         respuesta_ia = self.conexion_ia.enviar_mensaje(entrada_ia)
 
         # Guardar chat
         self.guardar_chat(usuario, mensaje_usuario, respuesta_ia)
-
-        
 
         return respuesta_ia
 
