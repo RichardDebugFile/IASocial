@@ -86,7 +86,8 @@ SPRITE_PATHS = {
     3: ("Ira", os.path.join(RESOURCE_PATH, "ira.png")),
     4: ("Sorpresa", os.path.join(RESOURCE_PATH, "sorpresa.png")),
     5: ("Confianza", os.path.join(RESOURCE_PATH, "confianza.png")),
-    6: ("Decepción", os.path.join(RESOURCE_PATH, "decepcion.png"))
+    6: ("Decepción", os.path.join(RESOURCE_PATH, "decepcion.png")),
+    7: ("Optimismo", os.path.join(RESOURCE_PATH, "optimismo.png"))
 }
 
 # Cargar imágenes
