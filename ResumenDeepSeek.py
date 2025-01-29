@@ -3,6 +3,9 @@ from ConexionMySQL import ConexionMySQL
 import re
 import time
 
+from AnalisisSentimientoIA import AnalisisSentimientoIA
+import recomendacionesUsuarios  
+
 class ResumenDeepSeek:
     def __init__(self, db_params, modelo_resumen="deepseek-r1:8b"):
         """
@@ -13,6 +16,7 @@ class ResumenDeepSeek:
         self.db = ConexionMySQL(**db_params)
         self.db.conectar()
         self.conexion_resumen = ConexionDeepSeek(modelo=modelo_resumen)
+        self.analisissentimiento = AnalisisSentimientoIA(db_params, modelo_resumen)
 
     def obtener_chats_usuario(self, usuario, limite=10):
         """
@@ -278,6 +282,27 @@ class ResumenDeepSeek:
             # Eliminar los 10 chats antiguos
             self.eliminar_chats_antiguos(usuario)
             print("\n✅ Chats antiguos eliminados exitosamente!")
+
+
+            # **Ejecutar Análisis de Sentimiento**
+            print("\n=== INICIANDO ANÁLISIS DE SENTIMIENTO ===")
+            self.analisissentimiento.actualizar_sentimientos(usuario)
+            print("\n✅ Análisis de sentimiento completado!")
+
+            # **Ejecutar recomendaciones de usuarios**
+            print("\n=== GENERANDO RECOMENDACIONES DE USUARIOS ===")
+            # Obtener los vectores de características de los usuarios
+            features = recomendacionesUsuarios.get_user_features()
+            
+            # Calcular similitudes entre usuarios
+            matches = recomendacionesUsuarios.calculate_similarities(features)
+            
+            # Guardar los resultados en la base de datos
+            recomendacionesUsuarios.save_matches(matches)
+        
+            print("Proceso de recomendaciones completado con éxito.")
+            print("\n✅ Recomendaciones de usuarios generadas!")
+
             
         except Exception as e:
             print(f"\n!!! Error crítico al guardar: {str(e)}")
