@@ -83,7 +83,7 @@ class Memoria:
         )
         print(contexto)
 
-        entrada_ia = f"{contexto}\nPregunta Usuario: {mensaje_usuario}"
+        entrada_ia = f"{contexto}\nEl Usuario te dice: {mensaje_usuario}"
         respuesta_ia = self.conexion_ia.enviar_mensaje(entrada_ia)
 
         # Guardar chat
