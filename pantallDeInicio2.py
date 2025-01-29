@@ -275,12 +275,13 @@ def draw_principal_screen():
         screen.blit(ai_text_surface, (150, y_position))
         y_position += 22
 
-    # Notificación si hay usuarios similares
+    # -- Notificación debajo del recuadro de la IA -- #
     if usuarios_similares_cache:
-        notif_rect = pygame.Rect(200, 80, 400, 30)
+        # Antes estaba en (200, 80,...)
+        notif_rect = pygame.Rect(140, 320, 600, 25)  # <-- Cambios
         pygame.draw.rect(screen, (255, 0, 0), notif_rect)
         notif_text = font.render("¡Tienes un usuario bastante similar a ti!", True, WHITE)
-        screen.blit(notif_text, (notif_rect.x + 10, notif_rect.y + 5))
+        screen.blit(notif_text, (notif_rect.x + 10, notif_rect.y + 2))
 
     # Botón "Ver Chats"
     pygame.draw.rect(screen, DARK_GRAY, ver_chats_button)
@@ -288,11 +289,17 @@ def draw_principal_screen():
     screen.blit(ver_chats_text, (ver_chats_button.x + 10, ver_chats_button.y + 10))
 
     # Personaje
-    screen.blit(sprite, (580, 120))
-    pygame.draw.rect(screen, WHITE, (580, 40, 200, 60))
-    pygame.draw.rect(screen, BLACK, (580, 40, 200, 60), 2)
+    # Se mueve la caja de la emoción debajo del botón "Ver Chats"
+    # Antes estaba en (580, 40, 200, 60)
+    pygame.draw.rect(screen, WHITE, (580, 70, 200, 60))  # <-- Cambios
+    pygame.draw.rect(screen, BLACK, (580, 70, 200, 60), 2)
     emotion_text_surface = small_font.render(f"Emoción: {emotion_text}", True, BLACK)
-    screen.blit(emotion_text_surface, (590, 60))
+    # Se dibuja el texto un poco más centrado en la nueva caja
+    screen.blit(emotion_text_surface, (590, 95))         # <-- Cambios
+
+    # Se baja un poco más el sprite para que no se traslape
+    # Antes estaba en (580, 120)
+    screen.blit(sprite, (580, 150))                     # <-- Cambios
 
     # Entrada de texto (para la IA)
     pygame.draw.rect(screen, WHITE, (140, 350, 600, 30))
