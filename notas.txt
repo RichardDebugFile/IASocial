@@ -3,3 +3,7 @@ Los archivos: Conexion DeepSeek, Ollama y MySQL son exclusivamente para la conex
 El archivo main.py registra la memoria de la tabla chat_memoria en la BBDD.
 
 En TestDeepSeek se logrò un conexion de resumenes exitosos con la base de datos.
+
+
+
+Proceso: Interfaz gráfica - ConexionMySQL.py y ConexionOllama.py - Memoria.py - ResumenDeepSeek.py y ConexionDeepSeek.py - AnalisisSentimientoIA.py - recomendacionesUsuarios.py

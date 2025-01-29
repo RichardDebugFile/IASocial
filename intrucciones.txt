@@ -23,3 +23,5 @@ Comandos y librerías a instalar:
 8) pip install numpy
 9) pip install sentence-transformers
 10) pip install scikit-learn
+11) pip install pygame 
+12)
