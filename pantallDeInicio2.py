@@ -52,6 +52,7 @@ def obtener_usuarios_similares(db_params, usuario_actual):
     db.close()
     return [fila[0] for fila in resultado]
 
+
 def obtener_lista_usuarios_chateados(db_params, usuario_actual):
     db = mysql.connector.connect(**db_params)
     cursor = db.cursor()
@@ -87,20 +88,6 @@ def obtener_lista_usuarios_chateados(db_params, usuario_actual):
     lista_completa = list(set(usuarios_mensajes + usuarios_similares))
     return lista_completa
 
-def obtener_mensajes(db_params, user1, user2):
-    db = mysql.connector.connect(**db_params)
-    cursor = db.cursor()
-    query = """
-    SELECT sender, receiver, content, timestamp
-    FROM mensajes
-    WHERE (sender = %s AND receiver = %s)
-       OR (sender = %s AND receiver = %s)
-    ORDER BY timestamp ASC
-    """
-    cursor.execute(query, (user1, user2, user2, user1))
-    rows = cursor.fetchall()
-    db.close()
-    return rows
 
 def enviar_mensaje(db_params, sender, receiver, content):
     db = mysql.connector.connect(**db_params)
@@ -112,6 +99,7 @@ def enviar_mensaje(db_params, sender, receiver, content):
     cursor.execute(query, (sender, receiver, content))
     db.commit()
     db.close()
+
 
 def obtener_sentimiento_principal(usuario):
     try:
@@ -131,6 +119,31 @@ def obtener_sentimiento_principal(usuario):
     except Exception as e:
         print(f"Error al obtener sentimiento principal: {e}")
         return 1
+
+
+# -------------------------------------------------------
+# NUEVO: Función para cargar los mensajes una sola vez
+# -------------------------------------------------------
+mensajes_cache = []  # Aquí guardamos los mensajes del chat actual
+
+def cargar_mensajes_chat(db_params, user1, user2):
+    """
+    Carga los mensajes entre user1 y user2 y los guarda en mensajes_cache.
+    """
+    global mensajes_cache
+    db = mysql.connector.connect(**db_params)
+    cursor = db.cursor()
+    query = """
+    SELECT sender, receiver, content, timestamp
+    FROM mensajes
+    WHERE (sender = %s AND receiver = %s)
+       OR (sender = %s AND receiver = %s)
+    ORDER BY timestamp ASC
+    """
+    cursor.execute(query, (user1, user2, user2, user1))
+    mensajes_cache = cursor.fetchall()
+    db.close()
+
 
 # -------------------------------------------------------
 # OTRAS FUNCIONES: PEDIR NOMBRE, CARGAR IMAGEN, ETC.
@@ -173,6 +186,7 @@ def obtener_nombre_usuario():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if confirm_button.collidepoint(event.pos) and input_text.strip():
                     return input_text.strip()
+
 
 # -------------------------------------------------------
 # INICIALIZACIÓN
@@ -219,10 +233,15 @@ lista_usuarios_chats = []        # Para mostrar en pantalla de lista
 usuario_seleccionado = None      # El usuario con quien estamos chateando
 
 # -------------------------------------------------------
-# 1) Guardar la lista de usuarios similares (opcional)
-#    O consultarla 1 vez y guardarla en una variable
+# 1) Guardar la lista de usuarios similares
+#    (O consultarla 1 vez y guardarla)
 # -------------------------------------------------------
 usuarios_similares_cache = obtener_usuarios_similares(db_params, usuario)
+
+# -------------------------------------------------------
+# VARIABLES PARA LISTA DE CHATS
+# -------------------------------------------------------
+rects_usuarios = {}  # Guardamos rectángulos donde se dibujan los usuarios
 
 # -------------------------------------------------------
 # FUNCIONES DE DIBUJO PARA CADA MODO
@@ -297,7 +316,6 @@ def draw_lista_chats(lista_usuarios):
     screen.blit(title_surface, (200, 50))
     
     y_offset = 100
-    # Dibujamos cada usuario en la lista
     for i, usr in enumerate(lista_usuarios):
         rect = pygame.Rect(200, y_offset, 300, 30)
         pygame.draw.rect(screen, WHITE, rect)
@@ -306,7 +324,7 @@ def draw_lista_chats(lista_usuarios):
         text_surface = font.render(usr, True, BLACK)
         screen.blit(text_surface, (rect.x + 10, rect.y + 5))
 
-        # Guardamos la posición del rect en un diccionario para detectar clicks
+        # Guardar el rectángulo para detectar clicks
         rects_usuarios[i] = rect  
 
         y_offset += 40
@@ -314,8 +332,11 @@ def draw_lista_chats(lista_usuarios):
     pygame.display.flip()
 
 
-def draw_chat_screen(db_params, usuario, usuario_seleccionado, chat_input):
-    """Dibuja la pantalla de chat con usuario_seleccionado."""
+def draw_chat_screen(usuario, usuario_seleccionado, chat_input):
+    """
+    Dibuja la pantalla de chat con usuario_seleccionado
+    usando la variable global mensajes_cache (ya cargada).
+    """
     screen.fill(LIGHT_GRAY)
     
     # Título
@@ -323,11 +344,9 @@ def draw_chat_screen(db_params, usuario, usuario_seleccionado, chat_input):
     title_surface = font.render(title, True, BLACK)
     screen.blit(title_surface, (20, 20))
     
-    # Mostramos los mensajes del chat
-    mensajes = obtener_mensajes(db_params, usuario, usuario_seleccionado)
-    
+    # Mostramos los mensajes del chat DESDE mensajes_cache
     y_offset = 60
-    for msg in mensajes:
+    for msg in mensajes_cache:
         sender, receiver, content, timestamp = msg
         # Color distinto si lo envió el usuario actual
         color = (200, 255, 200) if sender == usuario else (255, 255, 255)
@@ -357,25 +376,17 @@ def draw_chat_screen(db_params, usuario, usuario_seleccionado, chat_input):
 
     return send_rect
 
-# -------------------------------------------------------
-# VARIABLES PARA LISTA DE CHATS
-# -------------------------------------------------------
-# Guardaremos los rectángulos donde se dibujan los usuarios
-# para poder detectar clicks (en draw_lista_chats).
-rects_usuarios = {}
 
 # -------------------------------------------------------
 # BUCLE PRINCIPAL
 # -------------------------------------------------------
 running = True
 while running:
-    # EVENTOS
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
         elif event.type == pygame.KEYDOWN:
-            # Manejo por modo
             if modo_actual == "principal":
                 # Teclado para la IA
                 if event.key == pygame.K_RETURN:
@@ -391,8 +402,12 @@ while running:
                 # Teclado para el chat
                 if event.key == pygame.K_RETURN:
                     if chat_input_text.strip():
+                        # Enviamos el mensaje
                         enviar_mensaje(db_params, usuario, usuario_seleccionado, chat_input_text.strip())
                         chat_input_text = ""
+                        # Recargamos los mensajes una sola vez
+                        cargar_mensajes_chat(db_params, usuario, usuario_seleccionado)
+
                 elif event.key == pygame.K_BACKSPACE:
                     chat_input_text = chat_input_text[:-1]
                 else:
@@ -409,9 +424,8 @@ while running:
 
                 # Botón "Ver Chats"
                 if ver_chats_button.collidepoint(event.pos):
-                    # 1) Obtenemos lista usuarios
+                    # Cargamos la lista de usuarios
                     lista_usuarios_chats = obtener_lista_usuarios_chateados(db_params, usuario)
-                    # 2) Cambiamos modo
                     modo_actual = "lista_chats"
 
             # Modo LISTA_CHATS
@@ -423,24 +437,29 @@ while running:
                             # Iniciar chat con 'usr'
                             usuario_seleccionado = usr
                             modo_actual = "chat"
-                            chat_input_text = ""  # Limpiar input del chat
+                            chat_input_text = ""
+                            # Cargar mensajes del chat (una vez)
+                            cargar_mensajes_chat(db_params, usuario, usuario_seleccionado)
 
             # Modo CHAT
             elif modo_actual == "chat":
-                # Revisar si se hace click en el botón "Enviar" del chat
-                send_rect = draw_chat_screen(db_params, usuario, usuario_seleccionado, chat_input_text)
+                # Dibujamos la pantalla de chat (ya sin abrir BD)
+                send_rect = draw_chat_screen(usuario, usuario_seleccionado, chat_input_text)
+                # Si click en "Enviar"
                 if send_rect.collidepoint(event.pos):
                     if chat_input_text.strip():
                         enviar_mensaje(db_params, usuario, usuario_seleccionado, chat_input_text.strip())
                         chat_input_text = ""
+                        # Recargar mensajes:
+                        cargar_mensajes_chat(db_params, usuario, usuario_seleccionado)
 
-    # DIBUJO SEGÚN MODO
+    # Dibujo según modo
     if modo_actual == "principal":
         draw_principal_screen()
     elif modo_actual == "lista_chats":
         draw_lista_chats(lista_usuarios_chats)
     elif modo_actual == "chat":
-        draw_chat_screen(db_params, usuario, usuario_seleccionado, chat_input_text)
+        draw_chat_screen(usuario, usuario_seleccionado, chat_input_text)
 
 pygame.quit()
 memoria.cerrar_conexiones()
