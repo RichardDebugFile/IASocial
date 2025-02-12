@@ -24,4 +24,8 @@ Comandos y librerías a instalar:
 9) pip install sentence-transformers
 10) pip install scikit-learn
 11) pip install pygame 
-12)
+
+
+Para borrar:
+- ollama rm llama3.2
+- ollama rm deepseek-r1:8b
